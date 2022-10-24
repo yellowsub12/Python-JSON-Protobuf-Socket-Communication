@@ -3,7 +3,7 @@ import socket
 import sys
 import json
 import uuid
-
+# Source for lots of code and comments here https://realpython.com/python-sockets/
 
 HOST = "127.0.0.1" # The server's hostname or IP address
 PORT = 65432 # The port used by the server
@@ -36,14 +36,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     while connection:
         RFW_ID, typeName, WorkloadMetric, BatchUnit, BatchSize, BatchID, data_type,DataAnalytics = RequestGenerator() 
 
-        # Serialize Request
         RFW = {"RFW_ID": RFW_ID,  "typeName": typeName, "WorkloadMetric": WorkloadMetric, "BatchUnit": BatchUnit, "BatchID": BatchID, "BatchSize": BatchSize, "data_type": data_type, "DataAnalytics":DataAnalytics}
         receivedRequest = json.dumps(RFW)
 
 
         s.sendall(receivedRequest.encode("utf-8"))
         
-        # Notify User Request Sent
         print("\nRequest Sent!")
         print(receivedRequest)
         print("\nWaiting for Response ...\n")
@@ -52,7 +50,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # 1024 Represents Buffer Size in Bytes
         data = s.recv(1024)
         
-        # Deserialize Response
         res = json.loads(data.decode('utf-8'))
 
         # Print Response

@@ -4,7 +4,7 @@ import sys
 import json
 import csv
 import numpy as np
-
+# Credit for some of the code https://realpython.com/python-sockets
 
 
 #CLIENT'S RFW

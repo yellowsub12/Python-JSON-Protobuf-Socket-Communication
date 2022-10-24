@@ -40,13 +40,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         receivedRequest = RequestWork.SerializeToString()
         s.sendall(receivedRequest)
         
-        # Notify User Request Sent
         print("\nRequest Sent!")
         print(receivedRequest)
         print("\nWaiting for Response ...\n")
-
-        # Receive Response from Server
-        # 1024 Represents Buffer Size in Bytes
         data = s.recv(1024)
         
         # Deserialize Response
