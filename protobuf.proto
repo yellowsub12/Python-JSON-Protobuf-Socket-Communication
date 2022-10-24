@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package tutorial;
+
+// https://developers.google.com/protocol-buffers/docs/pythontutorial
+
+
+message RequestForWork {
+    string RFW_ID = 1;
+    string typeName = 2;
+    int32 WorkloadMetric = 3;
+    int32 BatchUnit = 4;
+    int32 BatchID = 5;
+    int32 BatchSize = 6;
+    string data_type = 7;
+    string DataAnalytics = 8;
+}
+
+message ResponseForData {
+    string RFW_ID = 1;
+    int32 FinalBatchID = 2;
+    repeated float ProcessedData = 3 [packed=true];
+    string DataAnalytics = 4;
+}
+

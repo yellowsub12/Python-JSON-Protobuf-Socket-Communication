@@ -1,16 +1,18 @@
-# app-server.py
+# protobuf-server.py
 import socket
 import sys
 import json
 import csv
+from xmlrpc.client import Server
 import numpy as np
+import protobuf_pb2 as pb
 
 
 
 #CLIENT'S RFW
 #1. RFW ID
 #2. Benchmark Type (such as DVD store or NDBench)
-def BenchmarkType(Benchmark_type, Data_type): 
+def BenchmarkType(Benchmark_type, Data_type):
     return f"WorkloadData/{Benchmark_type}-{Data_type}.csv"
 #3. Workload Metric (such as CPUUtilization or NetworkIn)
 #4. Batch Unit (number of samples contained in each batch, such as 100)
@@ -19,7 +21,7 @@ def BenchmarkType(Benchmark_type, Data_type):
 #7. Data Type (training data or testing data)
 #8. Data analytics (avg, std, max, min)
 
-def ProcessData(typeName, BatchUnit, BatchSize, BatchID, WorkloadMetric, DataAnalytics): 
+def ProcessData(typeName, BatchUnit, BatchSize, BatchID, WorkloadMetric, DataAnalytics):
     ProcessedData = []
     with open(typeName, mode = 'r') as file:
         datasetFile = csv.reader(file)
@@ -43,7 +45,7 @@ PORT = 65432 # Port to listen on (non-privileged ports are > 1023)
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
-    try: # Creates socket object that supports context manager type, so you can use it in a with statement without needed s.close():
+    try: # Creates socket object that supports context manager type, so you can use it in a with statement without needed s.close()=
     # AF_INET is the Internet address family (IPv4), SOCK_STREAM is TCP
     
         s.bind((HOST, PORT)) # Values passed to bind depend on address family (AF_INET)
@@ -58,10 +60,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 if not data:
                     break
                 print("RFW Received! Preparing to send RFD!")
-                server_request = json.loads(data.decode('utf-8'))
-                BenchmarktypeName = BenchmarkType(server_request['typeName'], server_request['data_type'])
-                ProcessedData = ProcessData(BenchmarktypeName, server_request['BatchUnit'], server_request['BatchSize'], server_request['BatchID'], server_request['WorkloadMetric'], server_request['DataAnalytics'])
-                DataAnalytics = server_request['DataAnalytics']
+                server_request = pb.RequestForWork()
+                server_request.ParseFromString(data)
+                BenchmarktypeName = BenchmarkType(server_request.typeName, server_request.data_type)
+                ProcessedData = ProcessData(BenchmarktypeName, server_request.BatchUnit, server_request.BatchSize, server_request.BatchID, server_request.WorkloadMetric, server_request.DataAnalytics)
+                DataAnalytics = server_request.DataAnalytics
                 if DataAnalytics == 'avg':
                     DataAnalyticsAnswer = sum(ProcessedData)/len(ProcessedData)
                 elif DataAnalytics == 'std':
@@ -81,12 +84,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 else:
                     DataAnalyticsAnswer = 0
                 
-                FinalBatchID = server_request['BatchID'] + server_request['BatchSize'] - 1
-                ResponseForData = {"RFW_ID": server_request['RFW_ID'], "FinalBatchID": FinalBatchID, "ProcessedData": ProcessedData, "DataAnalytics":DataAnalyticsAnswer} 
-                ServerResponse = json.dumps(ResponseForData)
-                conn.sendall(ServerResponse.encode('utf-8')) #sends client data back
+                FinalBatchID = server_request.BatchID + server_request.BatchSize - 1
+                #ResponseForData = {"RFW_ID"= server_request.RFW_ID, "FinalBatchID"= FinalBatchID, "ProcessedData"= ProcessedData, "DataAnalytics"=DataAnalyticsAnswer} 
+                ServerResponse = pb.ResponseForData(RFW_ID = server_request.RFW_ID, FinalBatchID= FinalBatchID, ProcessedData= ProcessedData, DataAnalytics=str(DataAnalyticsAnswer))
+                ServerDataResponse= ServerResponse.SerializeToString()
+                conn.sendall(ServerDataResponse) #sends client data back
                 print("The Server's Response Has Been Sent!")
-                print(ServerResponse)
+                print(ServerDataResponse)
                 print("Awaiting for a new request!")
                 #if conn.recv returns an empty bytes object, that means client closed the connection and  the loop is terminated, with statement closes the socket at the end of the block.
     except KeyboardInterrupt:

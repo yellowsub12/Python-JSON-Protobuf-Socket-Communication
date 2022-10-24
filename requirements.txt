@@ -1,0 +1,3 @@
+# make sure to do pip install protobuf 
+To run the JSON app, do python app-server.py first and then python app-client.py
+To run the protobuf app, do pip install protobuf (only the first time!), then python protobuf-server.py, and then python protobuf-client.py 

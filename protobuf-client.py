@@ -1,8 +1,7 @@
-# app-client.py
+# protobuf-client.py
 import socket
-import sys
-import json
 import uuid
+import protobuf_pb2 as pb
 
 
 HOST = "127.0.0.1" # The server's hostname or IP address
@@ -36,12 +35,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     while connection:
         RFW_ID, typeName, WorkloadMetric, BatchUnit, BatchSize, BatchID, data_type,DataAnalytics = RequestGenerator() 
 
-        # Serialize Request
-        RFW = {"RFW_ID": RFW_ID,  "typeName": typeName, "WorkloadMetric": WorkloadMetric, "BatchUnit": BatchUnit, "BatchID": BatchID, "BatchSize": BatchSize, "data_type": data_type, "DataAnalytics":DataAnalytics}
-        receivedRequest = json.dumps(RFW)
-
-
-        s.sendall(receivedRequest.encode("utf-8"))
+        # Serializes
+        RequestWork = pb.RequestForWork(RFW_ID=RFW_ID, typeName=typeName,WorkloadMetric=WorkloadMetric,BatchUnit=BatchUnit,BatchID=BatchID, BatchSize=BatchSize, data_type=data_type, DataAnalytics=DataAnalytics)
+        receivedRequest = RequestWork.SerializeToString()
+        s.sendall(receivedRequest)
         
         # Notify User Request Sent
         print("\nRequest Sent!")
@@ -53,11 +50,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         data = s.recv(1024)
         
         # Deserialize Response
-        res = json.loads(data.decode('utf-8'))
+        Response = pb.ResponseForData()
+        Response.ParseFromString(data)
 
         # Print Response
         print("Response Received!")
-        print(res)
+        print(Response)
         user_input = input('Would you like to continue or end the program? Press 9 to exit! Else press 1 to continue : ')
         if user_input == '9':
             connection = False
